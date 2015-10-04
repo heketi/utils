@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/heketi/utils.svg?branch=master)](https://travis-ci.org/heketi/utils)
+
 # Heketi Utility Functions
 
 Generic Go utility functions
