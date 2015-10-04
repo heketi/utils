@@ -27,6 +27,7 @@ import (
 
 type LogLevel int
 
+// Log levels
 const (
 	LEVEL_NOLOG LogLevel = iota
 	LEVEL_CRITICAL
@@ -55,6 +56,7 @@ func logWithLongFile(l *log.Logger, format string, v ...interface{}) {
 		fmt.Sprintf(format, v...))
 }
 
+// Create a new logger
 func NewLogger(prefix string, level LogLevel) *Logger {
 	godbc.Require(level >= 0, level)
 	godbc.Require(level <= LEVEL_DEBUG, level)
@@ -82,44 +84,52 @@ func NewLogger(prefix string, level LogLevel) *Logger {
 	return l
 }
 
+// Return current level
 func (l *Logger) Level() LogLevel {
 	return l.level
 }
 
+// Set level
 func (l *Logger) SetLevel(level LogLevel) {
 	l.level = level
 }
 
+// Log critical information
 func (l *Logger) Critical(format string, v ...interface{}) {
 	if l.level >= LEVEL_CRITICAL {
 		logWithLongFile(l.critlog, format, v...)
 	}
 }
 
+// Log error string
 func (l *Logger) LogError(format string, v ...interface{}) {
 	if l.level >= LEVEL_ERROR {
 		logWithLongFile(l.errorlog, format, v...)
 	}
 }
 
+// Log error variable
 func (l *Logger) Err(err error) {
 	if l.level >= LEVEL_ERROR {
 		logWithLongFile(l.errorlog, "%v", err)
 	}
 }
 
+// Log warning information
 func (l *Logger) Warning(format string, v ...interface{}) {
 	if l.level >= LEVEL_WARNING {
 		l.warninglog.Printf(format, v...)
 	}
 }
 
+// Log string
 func (l *Logger) Info(format string, v ...interface{}) {
 	if l.level >= LEVEL_INFO {
 		l.infolog.Printf(format, v...)
 	}
 }
 
+// Log string as debug
 func (l *Logger) Debug(format string, v ...interface{}) {
 	if l.level >= LEVEL_DEBUG {
 		logWithLongFile(l.debuglog, format, v...)

@@ -23,6 +23,7 @@ import (
 	"net/http"
 )
 
+// Return the body from a response as a string
 func GetStringFromResponse(r *http.Response) (string, error) {
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, r.ContentLength))
 	if err != nil {
@@ -32,6 +33,7 @@ func GetStringFromResponse(r *http.Response) (string, error) {
 	return string(body), nil
 }
 
+// Return the body from a response as an error
 func GetErrorFromResponse(r *http.Response) error {
 	s, err := GetStringFromResponse(r)
 	if err != nil {

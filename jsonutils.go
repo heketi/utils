@@ -37,11 +37,13 @@ func jsonFromBody(r io.Reader, v interface{}) error {
 	return nil
 }
 
+// Unmarshal JSON from request
 func GetJsonFromRequest(r *http.Request, v interface{}) error {
 	defer r.Body.Close()
 	return jsonFromBody(r.Body, v)
 }
 
+// Unmarshal JSON from response
 func GetJsonFromResponse(r *http.Response, v interface{}) error {
 	defer r.Body.Close()
 	return jsonFromBody(r.Body, v)

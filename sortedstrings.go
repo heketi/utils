@@ -20,6 +20,7 @@ import (
 	"sort"
 )
 
+// Check if a sorted string list has a string
 func SortedStringHas(s sort.StringSlice, x string) bool {
 	index := s.Search(x)
 	if index == len(s) {
@@ -28,6 +29,7 @@ func SortedStringHas(s sort.StringSlice, x string) bool {
 	return s[s.Search(x)] == x
 }
 
+// Delete a string from a sorted string list
 func SortedStringsDelete(s sort.StringSlice, x string) sort.StringSlice {
 	index := s.Search(x)
 	if len(s) != index && s[index] == x {

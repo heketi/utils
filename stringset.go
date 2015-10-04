@@ -24,12 +24,16 @@ type StringSet struct {
 	Set sort.StringSlice
 }
 
+// Create a string set.
+//
+// A string set is a list where each element appears only once
 func NewStringSet() *StringSet {
 	return &StringSet{
 		Set: make(sort.StringSlice, 0),
 	}
 }
 
+// Add a string to the string set
 func (s *StringSet) Add(v string) {
 	if !SortedStringHas(s.Set, v) {
 		s.Set = append(s.Set, v)
@@ -37,6 +41,7 @@ func (s *StringSet) Add(v string) {
 	}
 }
 
+// Return string list
 func (s *StringSet) Strings() []string {
 	return s.Set
 }

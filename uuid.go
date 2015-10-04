@@ -23,6 +23,7 @@ import (
 	"github.com/lpabon/godbc"
 )
 
+// Return a 16-byte uuid
 func GenUUID() string {
 	uuid := make([]byte, 16)
 	n, err := rand.Read(uuid)
