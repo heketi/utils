@@ -19,7 +19,7 @@ package utils
 import (
 	"bytes"
 	"errors"
-	"github.com/heketi/heketi/tests"
+	"github.com/heketi/tests"
 	"strings"
 	"testing"
 )

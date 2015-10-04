@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/heketi/heketi/utils"
+	"github.com/heketi/utils"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"io/ioutil"

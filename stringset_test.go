@@ -17,7 +17,7 @@
 package utils
 
 import (
-	"github.com/heketi/heketi/tests"
+	"github.com/heketi/tests"
 	"testing"
 )
 

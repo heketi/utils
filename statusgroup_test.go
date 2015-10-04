@@ -19,7 +19,7 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"github.com/heketi/heketi/tests"
+	"github.com/heketi/tests"
 	"testing"
 	"time"
 )
