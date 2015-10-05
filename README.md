@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/heketi/utils.svg?branch=master)](https://travis-ci.org/heketi/utils)
+[![GoDoc](https://godoc.org/github.com/heketi/utils?status.png)](https://godoc.org/github.com/heketi/utils)
 
 # Heketi Utility Functions
 
