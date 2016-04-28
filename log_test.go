@@ -67,6 +67,11 @@ func TestLogDebug(t *testing.T) {
 	tests.Assert(t, strings.Contains(testbuffer.String(), "[testing] DEBUG "), testbuffer.String())
 	tests.Assert(t, strings.Contains(testbuffer.String(), "Hello World"), testbuffer.String())
 	tests.Assert(t, strings.Contains(testbuffer.String(), "log_test.go"), testbuffer.String())
+
+	// [testing] DEBUG 2016/04/28 15:25:08 /src/github.com/heketi/utils/log_test.go:66: Hello World
+	fileinfo := strings.Split(testbuffer.String(), " ")[4]
+	filename := strings.Split(fileinfo, ":")[0]
+	tests.Assert(t, filename == "/src/github.com/heketi/utils/log_test.go", filename)
 	testbuffer.Reset()
 
 	l.SetLevel(LEVEL_INFO)
