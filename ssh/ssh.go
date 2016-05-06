@@ -20,14 +20,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/heketi/utils"
-	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/agent"
 	"io/ioutil"
 	"log"
 	"net"
 	"os"
 	"time"
+
+	"github.com/heketi/utils"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
 
 type SshExec struct {
@@ -105,7 +106,7 @@ func NewSshExecWithKeyFile(logger *utils.Logger, user string, file string) *SshE
 }
 
 // This function was based from https://github.com/coreos/etcd-manager/blob/master/main.go
-func (s *SshExec) ConnectAndExec(host string, commands []string, timeoutMinutes int) ([]string, error) {
+func (s *SshExec) ConnectAndExec(host string, commands []string, timeoutMinutes int, useSudo bool) ([]string, error) {
 
 	buffers := make([]string, len(commands))
 
@@ -132,6 +133,10 @@ func (s *SshExec) ConnectAndExec(host string, commands []string, timeoutMinutes 
 		var berr bytes.Buffer
 		session.Stdout = &b
 		session.Stderr = &berr
+
+		if useSudo {
+			command = "sudo " + command
+		}
 
 		err = session.Start(command)
 		if err != nil {
