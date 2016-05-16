@@ -158,7 +158,7 @@ func (s *SshExec) ConnectAndExec(host string, commands []string, timeoutMinutes 
 			if err != nil {
 				s.logger.LogError("Failed to run command [%v] on %v: Err[%v]: Stdout [%v]: Stderr [%v]",
 					command, host, err, b.String(), berr.String())
-				return nil, err
+				return nil, fmt.Errorf("%s", berr.String())
 			}
 			s.logger.Debug("Host: %v Command: %v\nResult: %v", host, command, b.String())
 			buffers[index] = b.String()
