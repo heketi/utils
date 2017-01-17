@@ -114,17 +114,21 @@ func (l *Logger) Critical(format string, v ...interface{}) {
 }
 
 // Log error string
-func (l *Logger) LogError(format string, v ...interface{}) {
+func (l *Logger) LogError(format string, v ...interface{}) error {
 	if l.level >= LEVEL_ERROR {
 		logWithLongFile(l.errorlog, format, v...)
 	}
+
+	return fmt.Errorf(format, v...)
 }
 
 // Log error variable
-func (l *Logger) Err(err error) {
+func (l *Logger) Err(err error) error {
 	if l.level >= LEVEL_ERROR {
 		logWithLongFile(l.errorlog, "%v", err)
 	}
+
+	return err
 }
 
 // Log warning information
@@ -132,6 +136,15 @@ func (l *Logger) Warning(format string, v ...interface{}) {
 	if l.level >= LEVEL_WARNING {
 		l.warninglog.Printf(format, v...)
 	}
+}
+
+// Log error variable as a warning
+func (l *Logger) WarnErr(err error) error {
+	if l.level >= LEVEL_WARNING {
+		logWithLongFile(l.warninglog, "%v", err)
+	}
+
+	return err
 }
 
 // Log string

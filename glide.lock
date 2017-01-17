@@ -1,0 +1,16 @@
+hash: 658cfedad4403f538791d0255638daafc490daaa985a9fdcdec5638d92a6596c
+updated: 2017-01-17T10:12:19.672364663-05:00
+imports:
+- name: github.com/lpabon/godbc
+  version: 9577782540c1398b710ddae1b86268ba03a19b0c
+- name: golang.org/x/crypto
+  version: 91902e332b9d47760598861512d2ae148f94ca58
+  subpackages:
+  - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
+  - ssh
+  - ssh/agent
+testImports:
+- name: github.com/heketi/tests
+  version: f3775cbcefd6822086c729e3ce4b70ca85a5bd21

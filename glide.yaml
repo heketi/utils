@@ -1,0 +1,9 @@
+package: github.com/heketi/utils
+import:
+- package: github.com/lpabon/godbc
+- package: golang.org/x/crypto
+  subpackages:
+  - ssh
+  - ssh/agent
+testImport:
+- package: github.com/heketi/tests
