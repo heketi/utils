@@ -19,6 +19,7 @@ package utils
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/heketi/tests"
 	"strings"
 	"testing"
@@ -68,10 +69,12 @@ func TestLogDebug(t *testing.T) {
 	tests.Assert(t, strings.Contains(testbuffer.String(), "Hello World"), testbuffer.String())
 	tests.Assert(t, strings.Contains(testbuffer.String(), "log_test.go"), testbuffer.String())
 
-	// [testing] DEBUG 2016/04/28 15:25:08 /src/github.com/heketi/utils/log_test.go:66: Hello World
+	// [testing] DEBUG 2016/04/28 15:25:08 /src/github.com/heketi/heketi/pkg/utils/log_test.go:66: Hello World
 	fileinfo := strings.Split(testbuffer.String(), " ")[4]
 	filename := strings.Split(fileinfo, ":")[0]
-	tests.Assert(t, filename == "/src/github.com/heketi/utils/log_test.go", filename)
+
+	// Need to check that it starts with /src/github.com
+	tests.Assert(t, strings.HasPrefix(filename, "/src/github.com/"))
 	testbuffer.Reset()
 
 	l.SetLevel(LEVEL_INFO)
@@ -96,6 +99,36 @@ func TestLogWarning(t *testing.T) {
 	tests.Assert(t, testbuffer.Len() == 0)
 }
 
+func TestLogWarnErr(t *testing.T) {
+	var testbuffer bytes.Buffer
+
+	defer tests.Patch(&stdout, &testbuffer).Restore()
+
+	l := NewLogger("[testing]", LEVEL_DEBUG)
+
+	ErrSample := errors.New("TEST ERROR")
+	err := l.WarnErr(ErrSample)
+	tests.Assert(t, strings.Contains(testbuffer.String(), "[testing] WARNING "), testbuffer.String())
+	tests.Assert(t, strings.Contains(testbuffer.String(), "TEST ERROR"), testbuffer.String())
+	tests.Assert(t, strings.Contains(testbuffer.String(), "log_test.go"), testbuffer.String())
+	tests.Assert(t, err == ErrSample)
+	testbuffer.Reset()
+
+	err = l.WarnErr(fmt.Errorf("GOT %v", err))
+	tests.Assert(t, strings.Contains(testbuffer.String(), "[testing] WARNING "), testbuffer.String())
+	tests.Assert(t, strings.Contains(testbuffer.String(), "TEST ERROR"), testbuffer.String())
+	tests.Assert(t, strings.Contains(testbuffer.String(), "log_test.go"), testbuffer.String())
+	tests.Assert(t, strings.Contains(testbuffer.String(), "GOT"), testbuffer.String())
+	tests.Assert(t, err != ErrSample)
+	tests.Assert(t, err != nil)
+	tests.Assert(t, strings.Contains(err.Error(), "GOT TEST ERROR"), err)
+	testbuffer.Reset()
+
+	l.SetLevel(LEVEL_ERROR)
+	l.WarnErr(ErrSample)
+	tests.Assert(t, testbuffer.Len() == 0)
+}
+
 func TestLogError(t *testing.T) {
 	var testbuffer bytes.Buffer
 
@@ -103,14 +136,16 @@ func TestLogError(t *testing.T) {
 
 	l := NewLogger("[testing]", LEVEL_DEBUG)
 
-	l.LogError("Hello %v", "World")
+	err := l.LogError("Hello %v", "World")
 	tests.Assert(t, strings.Contains(testbuffer.String(), "[testing] ERROR "), testbuffer.String())
 	tests.Assert(t, strings.Contains(testbuffer.String(), "Hello World"), testbuffer.String())
 	tests.Assert(t, strings.Contains(testbuffer.String(), "log_test.go"), testbuffer.String())
 	testbuffer.Reset()
 	testbuffer.Reset()
+	tests.Assert(t, err != nil)
+	tests.Assert(t, strings.Contains(err.Error(), "Hello World"), err)
 
-	err := errors.New("BAD")
+	err = errors.New("BAD")
 	l.Err(err)
 	tests.Assert(t, strings.Contains(testbuffer.String(), "[testing] ERROR "), testbuffer.String())
 	tests.Assert(t, strings.Contains(testbuffer.String(), "BAD"), testbuffer.String())
@@ -140,4 +175,34 @@ func TestLogCritical(t *testing.T) {
 	l.LogError("TEXT")
 	tests.Assert(t, testbuffer.Len() == 0)
 
+}
+
+func TestLogErr(t *testing.T) {
+	var testbuffer bytes.Buffer
+
+	defer tests.Patch(&stderr, &testbuffer).Restore()
+
+	l := NewLogger("[testing]", LEVEL_DEBUG)
+
+	ErrSample := errors.New("TEST ERROR")
+	err := l.Err(ErrSample)
+	tests.Assert(t, strings.Contains(testbuffer.String(), "[testing] ERROR "), testbuffer.String())
+	tests.Assert(t, strings.Contains(testbuffer.String(), "TEST ERROR"), testbuffer.String())
+	tests.Assert(t, strings.Contains(testbuffer.String(), "log_test.go"), testbuffer.String())
+	tests.Assert(t, err == ErrSample)
+	testbuffer.Reset()
+
+	err = l.Err(fmt.Errorf("GOT %v", err))
+	tests.Assert(t, strings.Contains(testbuffer.String(), "[testing] ERROR "), testbuffer.String())
+	tests.Assert(t, strings.Contains(testbuffer.String(), "TEST ERROR"), testbuffer.String())
+	tests.Assert(t, strings.Contains(testbuffer.String(), "log_test.go"), testbuffer.String())
+	tests.Assert(t, strings.Contains(testbuffer.String(), "GOT"), testbuffer.String())
+	tests.Assert(t, err != ErrSample)
+	tests.Assert(t, err != nil)
+	tests.Assert(t, strings.Contains(err.Error(), "GOT TEST ERROR"), err)
+	testbuffer.Reset()
+
+	l.SetLevel(LEVEL_NOLOG)
+	l.Err(ErrSample)
+	tests.Assert(t, testbuffer.Len() == 0)
 }
