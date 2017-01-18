@@ -21,8 +21,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
 	"runtime"
-	"strings"
 
 	"github.com/lpabon/godbc"
 )
@@ -53,18 +53,7 @@ type Logger struct {
 
 func logWithLongFile(l *log.Logger, format string, v ...interface{}) {
 	_, file, line, _ := runtime.Caller(2)
-
-	// Shorten the path.
-	// From
-	// /builddir/build/BUILD/heketi-3f4a5b1b6edff87232e8b24533c53b4151ebd9c7/src/github.com/heketi/heketi/apps/glusterfs/volume_entry.go
-	// to
-	// src/github.com/heketi/heketi/apps/glusterfs/volume_entry.go
-	i := strings.Index(file, "/src/")
-	if i == -1 {
-		i = 0
-	}
-
-	l.Print(fmt.Sprintf("%v:%v: ", file[i:], line) +
+	l.Print(fmt.Sprintf("%v:%v: ", path.Base(file), line) +
 		fmt.Sprintf(format, v...))
 }
 
