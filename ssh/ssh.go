@@ -18,22 +18,20 @@ package ssh
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"os"
 	"time"
 
-	"github.com/heketi/utils"
+	"github.com/tmc/scp"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
 
 type SshExec struct {
 	clientConfig *ssh.ClientConfig
-	logger       *utils.Logger
 }
 
 func getKeyFile(file string) (key ssh.Signer, err error) {
@@ -49,28 +47,24 @@ func getKeyFile(file string) (key ssh.Signer, err error) {
 	return
 }
 
-func NewSshExecWithAuth(logger *utils.Logger, user string) *SshExec {
+func NewSshExecWithAuth(user string) (SshExecutor, error) {
 
 	sshexec := &SshExec{}
-	sshexec.logger = logger
 
 	authSocket := os.Getenv("SSH_AUTH_SOCK")
 	if authSocket == "" {
-		log.Fatal("SSH_AUTH_SOCK required, check that your ssh agent is running")
-		return nil
+		return nil, fmt.Errorf("SSH_AUTH_SOCK not set")
 	}
 
 	agentUnixSock, err := net.Dial("unix", authSocket)
 	if err != nil {
-		log.Fatal(err)
-		return nil
+		return nil, fmt.Errorf("Cannot connect to SSH_AUTH_SOCK")
 	}
 
 	agent := agent.NewClient(agentUnixSock)
 	signers, err := agent.Signers()
 	if err != nil {
-		log.Fatal(err)
-		return nil
+		return nil, fmt.Errorf("Could not get key signatures: %v", err)
 	}
 
 	sshexec.clientConfig = &ssh.ClientConfig{
@@ -78,21 +72,19 @@ func NewSshExecWithAuth(logger *utils.Logger, user string) *SshExec {
 		Auth: []ssh.AuthMethod{ssh.PublicKeys(signers...)},
 	}
 
-	return sshexec
+	return sshexec, nil
 }
 
-func NewSshExecWithKeyFile(logger *utils.Logger, user string, file string) *SshExec {
+func NewSshExecWithKeyFile(user string, file string) (SshExecutor, error) {
 
 	var key ssh.Signer
 	var err error
 
 	sshexec := &SshExec{}
-	sshexec.logger = logger
 
 	// Now in the main function DO:
 	if key, err = getKeyFile(file); err != nil {
-		fmt.Println("Unable to get keyfile")
-		return nil
+		return nil, fmt.Errorf("Unable to get keyfile")
 	}
 	// Define the Client Config as :
 	sshexec.clientConfig = &ssh.ClientConfig{
@@ -102,19 +94,72 @@ func NewSshExecWithKeyFile(logger *utils.Logger, user string, file string) *SshE
 		},
 	}
 
-	return sshexec
+	return sshexec, nil
+}
+
+func (s *SshExec) Copy(size int64,
+	mode os.FileMode,
+	fileName string,
+	contents io.Reader,
+	host, destinationPath string) error {
+
+	// Create a connection to the server
+	client, err := ssh.Dial("tcp", host, s.clientConfig)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	// Create a session
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	// Copy Data
+	err = scp.Copy(size, mode, fileName, contents, destinationPath, session)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *SshExec) CopyPath(sourcePath, host, destinationPath string) error {
+
+	// Create a connection to the server
+	client, err := ssh.Dial("tcp", host, s.clientConfig)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	// Create a session
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	// Copy Data
+	err = scp.CopyPath(sourcePath, destinationPath, session)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // This function was based from https://github.com/coreos/etcd-manager/blob/master/main.go
-func (s *SshExec) ConnectAndExec(host string, commands []string, timeoutMinutes int, useSudo bool) ([]string, error) {
+func (s *SshExec) Exec(host string, commands []string, timeoutMinutes int, useSudo bool) ([]string, error) {
 
 	buffers := make([]string, len(commands))
 
 	// :TODO: Will need a timeout here in case the server does not respond
 	client, err := ssh.Dial("tcp", host, s.clientConfig)
 	if err != nil {
-		s.logger.Warning("Failed to create SSH connection to %v: %v", host, err)
-		return nil, err
+		return nil, fmt.Errorf("Failed to create SSH connection to %v: %v", host, err)
 	}
 	defer client.Close()
 
@@ -123,8 +168,7 @@ func (s *SshExec) ConnectAndExec(host string, commands []string, timeoutMinutes 
 
 		session, err := client.NewSession()
 		if err != nil {
-			s.logger.LogError("Unable to create SSH session: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("Unable to create SSH session: %v", err)
 		}
 		defer session.Close()
 
@@ -156,22 +200,20 @@ func (s *SshExec) ConnectAndExec(host string, commands []string, timeoutMinutes 
 		select {
 		case err := <-errch:
 			if err != nil {
-				s.logger.LogError("Failed to run command [%v] on %v: Err[%v]: Stdout [%v]: Stderr [%v]",
+				return nil, fmt.Errorf("Failed to run command [%v] on %v: Err[%v]: Stdout [%v]: Stderr [%v]",
 					command, host, err, b.String(), berr.String())
-				return nil, fmt.Errorf("%s", berr.String())
 			}
-			s.logger.Debug("Host: %v Command: %v\nResult: %v", host, command, b.String())
+			//LOG("Host: %v Command: %v\nResult: %v", host, command, b.String())
 			buffers[index] = b.String()
 
 		case <-timeout:
-			s.logger.LogError("Timeout on command [%v] on %v: Err[%v]: Stdout [%v]: Stderr [%v]",
-				command, host, err, b.String(), berr.String())
 			err := session.Signal(ssh.SIGKILL)
 			if err != nil {
-				s.logger.LogError("Unable to send kill signal to command [%v] on host [%v]: %v",
+				return nil, fmt.Errorf("Command timed out and unable to send kill signal to command [%v] on host [%v]: %v",
 					command, host, err)
 			}
-			return nil, errors.New("SSH command timeout")
+			return nil, fmt.Errorf("Timeout on command [%v] on %v: Err[%v]: Stdout [%v]: Stderr [%v]",
+				command, host, err, b.String(), berr.String())
 		}
 	}
 
