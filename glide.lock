@@ -1,10 +1,12 @@
 hash: 658cfedad4403f538791d0255638daafc490daaa985a9fdcdec5638d92a6596c
-updated: 2017-01-17T10:12:19.672364663-05:00
+updated: 2017-02-22T16:52:15.61476432-05:00
 imports:
 - name: github.com/lpabon/godbc
   version: 9577782540c1398b710ddae1b86268ba03a19b0c
+- name: github.com/tmc/scp
+  version: 8734282bd23b160cc07954a157106fe59e0f3993
 - name: golang.org/x/crypto
-  version: 91902e332b9d47760598861512d2ae148f94ca58
+  version: d172538b2cfce0c13cee31e647d0367aa8cd2486
   subpackages:
   - curve25519
   - ed25519
