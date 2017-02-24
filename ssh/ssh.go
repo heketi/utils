@@ -199,12 +199,12 @@ func (s *SshExec) Exec(host string, commands []string, timeoutMinutes int, useSu
 		// Wait for either the command completion or timeout
 		select {
 		case err := <-errch:
+			buffers[index] = b.String()
 			if err != nil {
-				return nil, fmt.Errorf("Failed to run command [%v] on %v: Err[%v]: Stdout [%v]: Stderr [%v]",
+				return buffers, fmt.Errorf("Failed to run command [%v] on %v: Err[%v]: Stdout [%v]: Stderr [%v]",
 					command, host, err, b.String(), berr.String())
 			}
 			//LOG("Host: %v Command: %v\nResult: %v", host, command, b.String())
-			buffers[index] = b.String()
 
 		case <-timeout:
 			err := session.Signal(ssh.SIGKILL)
