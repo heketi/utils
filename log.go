@@ -57,13 +57,6 @@ func logWithLongFile(l *log.Logger, format string, v ...interface{}) {
 		fmt.Sprintf(format, v...))
 }
 
-func logWithLongFileAndFunction(l *log.Logger, format string, v ...interface{}) {
-	pc, file, line, _ := runtime.Caller(2)
-	caller_func_info := runtime.FuncForPC(pc)
-	l.Print(fmt.Sprintf("%v:%v(%v): ", path.Base(file), line, path.Base(caller_func_info.Name())) +
-		fmt.Sprintf(format, v...))
-}
-
 // Create a new logger
 func NewLogger(prefix string, level LogLevel) *Logger {
 	godbc.Require(level >= 0, level)
@@ -157,6 +150,6 @@ func (l *Logger) Info(format string, v ...interface{}) {
 // Log string as debug
 func (l *Logger) Debug(format string, v ...interface{}) {
 	if l.level >= LEVEL_DEBUG {
-		logWithLongFileAndFunction(l.debuglog, format, v...)
+		logWithLongFile(l.debuglog, format, v...)
 	}
 }
